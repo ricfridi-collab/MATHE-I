@@ -82,7 +82,7 @@ body {
     flex-direction: column;
 }
 
-/* 4. كروت الدروس (القائمة) - التصميم الأصلي البسيط */
+/* 4. كروت الدروس (القائمة) - التعديل لفصل الأيقونات على الجانب */
 .content-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -97,10 +97,12 @@ body {
     border-radius: 20px;
     display: flex;
     align-items: center;
+    flex-direction: row-reverse; /* لوضع الأيقونة في اليمين (في RTL) والنص في اليسار */
     padding: 18px;
     border: 1px solid rgba(0, 242, 255, 0.05);
     cursor: pointer;
     transition: var(--transition);
+    min-height: 80px;
 }
 
 .card:active {
@@ -118,27 +120,37 @@ body {
     align-items: center;
     font-size: 1.5rem;
     color: var(--accent-color);
-    margin-left: 15px; /* المسافة من اليسار لأن الموقع RTL */
+    /* استخدام margin-left مع row-reverse يضع الأيقونة في أقصى اليمين وتبعدها عن النص */
+    margin-left: auto; 
     flex-shrink: 0;
-    order: 2; /* لجعل الأيقونة تأتي في البداية بصرياً في RTL */
+    order: 2; /* لضمان بقاء الأيقونة في أقصى الطرف */
 }
 
 .card-info {
-    order: 1; /* النص يأتي بعد الأيقونة في RTL */
+    order: 1; /* النص يأتي ثانياً (في اليسار) */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    margin-right: 15px; /* مسافة صغيرة بين النص وحافة البطاقة اليسرى */
 }
 
 .card-info h3 {
     font-size: 1.15rem;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
+    line-height: 1.2;
     white-space: nowrap;
+    display: flex;
+    align-items: center;
 }
 
 .card-info span {
     font-size: 0.85rem;
     opacity: 0.7;
+    line-height: 1.2;
 }
 
-/* 4.1 تنسيق خاص لأيقونة الامتحان (مختلف عن الأصل) */
+/* 4.1 تنسيق خاص بأيقونة الامتحان */
 .card-exam {
     background: linear-gradient(135deg, #2b2b2b 0%, #1e144a 100%);
     border: 2px solid rgba(255, 255, 255, 0.2);
@@ -148,7 +160,7 @@ body {
 .exam-special {
     background: #ffffff;
     color: #000;
-    border-radius: 8px; /* شكل أقرب للمستطيل ليشبه ورقة */
+    border-radius: 8px;
     width: 50px;
     height: 60px;
     box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
@@ -159,7 +171,7 @@ body {
     text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
-/* 5. واجهة الاختبار (التصحيح للتصميم الأصلي) */
+/* 5. واجهة الاختبار */
 .quiz-header {
     display: flex;
     justify-content: space-between;
@@ -211,7 +223,7 @@ body {
     font-weight: 900;
 }
 
-/* --- هنا التعديل المطلوب: تنسيق المدخلات لتبدو كما في الكود الأول --- */
+/* --- تنسيق المدخلات --- */
 #userInput {
     width: 100%;
     padding: 18px;
@@ -242,7 +254,7 @@ body {
     cursor: pointer;
     box-shadow: 0 5px 15px rgba(0, 242, 255, 0.2);
     box-sizing: border-box;
-    margin-top: 10px; /* مسافة صغيرة بين الحقل والزر */
+    margin-top: 10px;
 }
 
 .action-btn:active {
