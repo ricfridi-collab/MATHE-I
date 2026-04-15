@@ -7,6 +7,7 @@
     --text-color: #e0def4;
     --success: #00ff88;
     
+    /* الألوان المعدلة */
     --danger: #7b61ff;       
     --ticker-bg: #1a103d;    
     
@@ -81,7 +82,7 @@ body {
     flex-direction: column;
 }
 
-/* 4. كروت الدروس (القائمة) */
+/* 4. كروت الدروس (القائمة) - التصميم الأصلي البسيط */
 .content-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -117,13 +118,13 @@ body {
     align-items: center;
     font-size: 1.5rem;
     color: var(--accent-color);
-    margin-left: 15px;
+    margin-left: 15px; /* المسافة من اليسار لأن الموقع RTL */
     flex-shrink: 0;
+    order: 2; /* لجعل الأيقونة تأتي في البداية بصرياً في RTL */
 }
 
-.exam-icon {
-    background: rgba(255, 215, 0, 0.15);
-    color: #ffd700;
+.card-info {
+    order: 1; /* النص يأتي بعد الأيقونة في RTL */
 }
 
 .card-info h3 {
@@ -137,7 +138,28 @@ body {
     opacity: 0.7;
 }
 
-/* 5. واجهة الاختبار */
+/* 4.1 تنسيق خاص لأيقونة الامتحان (مختلف عن الأصل) */
+.card-exam {
+    background: linear-gradient(135deg, #2b2b2b 0%, #1e144a 100%);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.exam-special {
+    background: #ffffff;
+    color: #000;
+    border-radius: 8px; /* شكل أقرب للمستطيل ليشبه ورقة */
+    width: 50px;
+    height: 60px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+}
+
+.card-exam .card-info h3 {
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* 5. واجهة الاختبار (التصحيح للتصميم الأصلي) */
 .quiz-header {
     display: flex;
     justify-content: space-between;
@@ -187,6 +209,50 @@ body {
     font-size: 1.3rem;
     color: var(--accent-color);
     font-weight: 900;
+}
+
+/* --- هنا التعديل المطلوب: تنسيق المدخلات لتبدو كما في الكود الأول --- */
+#userInput {
+    width: 100%;
+    padding: 18px;
+    background: var(--side-bar-bg);
+    border: 2px solid rgba(0, 242, 255, 0.1);
+    border-radius: 15px;
+    color: white;
+    font-size: 1.4rem;
+    text-align: center;
+    margin: 20px 0;
+    outline: none;
+    box-sizing: border-box;
+}
+
+#userInput:focus {
+    border-color: var(--accent-color);
+}
+
+.action-btn {
+    width: 100%;
+    padding: 18px;
+    background: var(--accent-color);
+    color: var(--bg-main);
+    border: none;
+    border-radius: 15px;
+    font-weight: 900;
+    font-size: 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 242, 255, 0.2);
+    box-sizing: border-box;
+    margin-top: 10px; /* مسافة صغيرة بين الحقل والزر */
+}
+
+.action-btn:active {
+    transform: scale(0.98);
+}
+
+#feedback {
+    margin-top: 20px;
+    font-weight: bold;
+    min-height: 25px;
 }
 
 /* 6. تنسيقات ورقة الامتحان */
@@ -255,6 +321,7 @@ body {
     text-align: left; 
     background: #f9f9f9;
     color: #333;
+    box-sizing: border-box;
 }
 
 .paper-input:focus {
@@ -274,6 +341,7 @@ body {
     margin-top: 10px;
     border-radius: 4px;
     font-family: inherit;
+    box-sizing: border-box;
 }
 
 .submit-btn:hover {
@@ -394,6 +462,7 @@ body {
     margin-bottom: 20px;
     letter-spacing: 2px;
     outline: none;
+    box-sizing: border-box;
 }
 
 #activation-code:focus {
@@ -411,6 +480,7 @@ body {
     font-size: 1rem;
     cursor: pointer;
     transition: var(--transition);
+    box-sizing: border-box;
 }
 
 #activate-btn:disabled {
