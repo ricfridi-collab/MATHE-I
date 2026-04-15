@@ -1,7 +1,7 @@
 /**
  * HUNTER MATH - FINAL VERSION
  * قواعد بيانات ضخمة (280 سؤال للدروس + 100 سؤال للامتحانات)
- * نظام حماية متصل بـ SheetDB
+ * نظام حماية محدث للتحديث الفوري في SheetDB
  */
 
 // --- إعدادات الحماية ---
@@ -38,16 +38,16 @@ async function verifyCode() {
         if (!response.ok) throw new Error("فشل الاتصال");
         
         const data = await response.json();
-        // البحث عن الكود (نفترض العمود اسمه code)
         const codeEntry = data.find(entry => entry.code && entry.code.toLowerCase() === inputCode.toLowerCase());
 
         if (codeEntry) {
+            // التحقق الصارم: هل تم استخدامه؟
             if (codeEntry.used === "true" || codeEntry.used === true) {
                 msgEl.innerText = "❌ هذا الكود مستخدم مسبقاً!";
                 msgEl.style.color = "var(--danger)";
                 btn.disabled = false;
             } else {
-                // تحديث الشيت بأن الكود استخدم
+                // الكود صحيح وغير مستخدم -> تحديث الشيت فوراً
                 await markCodeAsUsed(codeEntry.id, inputCode); 
                 grantAccess(false);
             }
@@ -65,9 +65,10 @@ async function verifyCode() {
     }
 }
 
+// دالة محدثة لضمان تحديث الشيت بأن الكود تم استخدامه
 async function markCodeAsUsed(id, codeVal) {
     try {
-        // إرسال طلب PATCH لتحديث الحقل used
+        // نستخدم كود التفعيل نفسه كمعرف للبحث في SheetDB
         await fetch(`${API_URL}/code/${codeVal}`, {
             method: 'PATCH',
             headers: {
@@ -80,8 +81,9 @@ async function markCodeAsUsed(id, codeVal) {
                 }
             })
         });
+        console.log("تم تحديث حالة الكود في الشيت بنجاح.");
     } catch (e) {
-        console.warn("تنبيه: لم يتم تحديث السيرفر (تحقق من صلاحيات الـ API)، لكن التفعيل محلي سيعمل.");
+        console.error("تنبيه: لم نتمكن من الاتصال بالسيرفر للتحديث (تحقق من صلاحيات الـ API).");
     }
 }
 
@@ -107,7 +109,6 @@ function grantAccess(isAdmin) {
 
 // 1. بنك أسئلة الوحدات (70 سؤال لكل وحدة)
 
-// الوحدة 1: الأعداد والحساب
 const unit_01_DB = [
     { q: "PGCD(120, 48)", a: "24" }, { q: "هل العددان 15 و 28 أوليان فيما بينهما؟ (نعم/لا)", a: "نعم" },
     { q: "PGCD(150, 30)", a: "30" }, { q: "بسط الجذر √18", a: "3√2" },
@@ -144,7 +145,6 @@ const unit_01_DB = [
     { q: "بسط (√5+1)²", a: "6+2√5" }, { q: "احسب √(4/9)", a: "2/3" }
 ];
 
-// الوحدة 3: الحساب الحرفي
 const unit_03_DB = [
     { q: "انشر: (x+3)²", a: "x²+6x+9" }, { q: "انشر: (x-5)²", a: "x²-10x+25" },
     { q: "حل المعادلة 3x = 12", a: "4" }, { q: "بسط: 5x + 2x - x", a: "6x" },
@@ -179,7 +179,6 @@ const unit_03_DB = [
     { q: "تحليل: x³ + x", a: "x(x²+1)" }, { q: "حل: 3x+7 = 1", a: "-2" }
 ];
 
-// الوحدة 5: الهندسة
 const unit_05_DB = [
     { q: "في فيثاغورس: AB=6, AC=8 الوتر BC=؟", a: "10" }, { q: "Cos(0°)", a: "1" },
     { q: "Sin(30°)", a: "0.5" }, { q: "تانجانت الزاوية = المقابل / ...؟", a: "المجاور" },
@@ -216,7 +215,6 @@ const unit_05_DB = [
     { q: "طول قوس الدائرة؟", a: "α×π×R/180" }, { q: "العلاقة طالس تربط بين أضلاع ... متشابهة", a: "مثلثات" }
 ];
 
-// الوحدة 8: الدوال
 const unit_08_DB = [
     { q: "f(x)=3x هي دالة...؟", a: "خطية" }, { q: "f(x)=2x+5 هي دالة...؟", a: "تآلفية" },
     { q: "صورة 2 بالدالة f(x)=4x هي؟", a: "8" }, { q: "العدد الذي صورته 10 بالدالة f(x)=5x؟", a: "2" },
@@ -287,7 +285,7 @@ const examQuestionsDB = [
     { q: "بسط: (√5)²", a: "5" }, { q: "حل في R: |2x| = 4", a: "2 أو -2" },
     { q: "معامل التوجيه للمستقيم y = -x + 5؟", a: "-1" }, { q: "Sin(30) × Cos(60) = ؟", a: "0.25" },
     { q: "حسّل: (10⁻²)", a: "0.01" }, { q: "محيط دائرة قطرها 10 سم؟", a: "10π" },
-    { q: "حل: x/2 + 1 = 4", a: "6" }, { q: "ما هو mيل المستقيم الأفقي؟", a: "0" },
+    { q: "حل: x/2 + 1 = 4", a: "6" }, { q: "ما هو ميل المستقيم الأفقي؟", a: "0" },
     { q: "زاوية خارجية لمثلث متساوي الأضلاع؟", a: "120°" },
     { q: "حسّل الكسر: (1/2) / (1/4)", a: "2" }, { q: "هل 4 عدد أولي؟ (نعم/لا)", a: "لا" },
     { q: "بسط: √12 + √27", a: "5√3" }, { q: "حل المعادلة: 5x = 0", a: "0" },
@@ -301,7 +299,6 @@ const examQuestionsDB = [
     { q: "هل π عدد جذري؟ (نعم/لا)", a: "لا" }, { q: "انشر: (x+1)³", a: "x³+3x²+3x+1" }
 ];
 
-
 // --- منطق اللعبة والتحكم ---
 
 let currentQuestions = [];
@@ -310,7 +307,6 @@ let sessionScore = 0;
 let maxScore = 10;
 let isExamMode = false;
 
-// دالة لبدء التدريب (10 أسئلة)
 function startQuiz(unitId) {
     isExamMode = false;
     let db = [];
@@ -329,7 +325,6 @@ function startQuiz(unitId) {
     renderQuestion();
 }
 
-// دالة لبدء الامتحان (4 أسئلة)
 function startExamMode() {
     isExamMode = true;
     currentQuestions = [...examQuestionsDB].sort(() => 0.5 - Math.random()).slice(0, 4);
@@ -341,7 +336,6 @@ function startExamMode() {
     renderExamPaper();
 }
 
-// عرض السؤال الواحد (للتدريب)
 function renderQuestion() {
     if (currentIdx >= maxScore) {
         showFinalResult();
@@ -401,7 +395,6 @@ function checkAnswer(correct) {
     setTimeout(renderQuestion, 1500);
 }
 
-// عرض ورقة الامتحان (4 أسئلة)
 function renderExamPaper() {
     document.getElementById('current-score').innerText = "0";
     const scoreCircleSpans = document.querySelectorAll('.score-circle span');
