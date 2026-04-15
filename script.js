@@ -1,74 +1,116 @@
 /**
  * HUNTER MATH - FINAL VERSION
- * قواعد بيانات ضخمة (280 سؤال للدروس + 100 سؤال للامتحانات)
- * نظام حماية محدث للتحديث الفوري في SheetDB
+ * نظام حماية محدث (معالجة مشكلة الفراغات في الشيت)
  */
 
 // --- إعدادات الحماية ---
 const ADMIN_CODES = ["ADMIN-001", "ADMIN-002"];
 const API_URL = "https://sheetdb.io/api/v1/2kors32netakz";
-const LOCAL_STORAGE_KEY = "hunter_math_activated";
+const LOCAL_STORAGE_KEY = "hunter_math_activated_codes";
 
 // --- منطق التحقق من التفعيل ---
 document.addEventListener('DOMContentLoaded', () => {
     const isActivated = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (isActivated === 'true') {
+    if (isActivated) {
         document.getElementById('activation-screen').style.display = 'none';
     }
 });
 
 async function verifyCode() {
-    const inputCode = document.getElementById('activation-code').value.trim();
+    // دالة مساعدة لإزالة المسافات الزائدة من النصوص
+    const cleanString = (str) => str.replace(/\s+/g, '').trim();
+
+    const rawInputCode = document.getElementById('activation-code').value;
+    const inputCode = cleanString(rawInputCode); // تنظيف الكود المدخل من الفراغات
+    
     const msgEl = document.getElementById('activation-msg');
     const btn = document.getElementById('activate-btn');
     
+    if (!inputCode) {
+        msgEl.innerText = "الرجاء إدخال الكود";
+        msgEl.style.color = "var(--danger)";
+        return;
+    }
+
     msgEl.innerText = "جاري التحقق...";
     msgEl.style.color = "#fff";
     btn.disabled = true;
 
-    // 1. الأدمن
+    // 1. التحقق من الأدمن
     if (ADMIN_CODES.includes(inputCode)) {
-        grantAccess(true);
+        grantAccess(inputCode);
         return;
     }
 
-    // 2. المستخدم العادي
+    // 2. التحقق المحلي الفوري
+    let usedCodesLocal = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || "[]");
+    if (usedCodesLocal.includes(inputCode)) {
+        msgEl.innerText = "❌ تم استخدام هذا الكود مسبقاً على هذا الجهاز!";
+        msgEl.style.color = "var(--danger)";
+        btn.disabled = false;
+        return;
+    }
+
+    // 3. البحث عن الكود (مع البحث المباشر وتنظيف البيانات)
     try {
-        const response = await fetch(API_URL);
+        const searchUrl = `${API_URL}/search?code=${encodeURIComponent(inputCode)}`;
+        const response = await fetch(searchUrl);
+        
         if (!response.ok) throw new Error("فشل الاتصال");
         
         const data = await response.json();
-        const codeEntry = data.find(entry => entry.code && entry.code.toLowerCase() === inputCode.toLowerCase());
 
-        if (codeEntry) {
-            // التحقق الصارم: هل تم استخدامه؟
-            if (codeEntry.used === "true" || codeEntry.used === true) {
-                msgEl.innerText = "❌ هذا الكود مستخدم مسبقاً!";
-                msgEl.style.color = "var(--danger)";
-                btn.disabled = false;
-            } else {
-                // الكود صحيح وغير مستخدم -> تحديث الشيت فوراً
-                await markCodeAsUsed(codeEntry.id, inputCode); 
-                grantAccess(false);
-            }
-        } else {
+        // إذا كانت المصفوفة فارغة، الكود غير موجود
+        if (data.length === 0) {
             msgEl.innerText = "❌ كود التفعيل غير صحيح!";
             msgEl.style.color = "var(--danger)";
             btn.disabled = false;
+            return;
+        }
+
+        // الكود موجود، نتحقق من قيمته (مع تنظيف قيمته من الشيت أيضاً)
+        const codeEntry = data[0]; 
+        
+        // ننظف الكود القادم من الشيت للتأكد من مطابقته (حل مشكلة الفراغات)
+        const sheetCodeValue = cleanString(codeEntry.code);
+
+        // مقارنة الكود المدخل بالكود النظيف من الشيت
+        if (inputCode !== sheetCodeValue) {
+            // قد يكون هناك حالة أخرى (مثل حالة الأحرف الكبيرة)، لكن التنظيف يحل 90% من المشاكل
+            // سنعتمم البحث الأصلي لفحص الحالة
+            if (codeEntry.code.toLowerCase() !== rawInputCode.toLowerCase()) {
+                 msgEl.innerText = "❌ كود التفعيل غير صحيح!";
+                 msgEl.style.color = "var(--danger)";
+                 btn.disabled = false;
+                 return;
+            }
+        }
+
+        // التحقق من الاستخدام
+        if (codeEntry.used === "true" || codeEntry.used === true || codeEntry.used === 1 || codeEntry.used === "yes") {
+            msgEl.innerText = "❌ عذراً، هذا الكود مستخدم من قبل شخص آخر!";
+            msgEl.style.color = "var(--danger)";
+            btn.disabled = false;
+        } else {
+            // الكود صحيح وغير مستخدم -> تفعيل وتحديث الشيت
+            usedCodesLocal.push(inputCode);
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(usedCodesLocal));
+            
+            await markCodeAsUsed(codeEntry.id, inputCode); 
+            grantAccess(inputCode);
         }
 
     } catch (error) {
-        console.error(error);
-        msgEl.innerText = "⚠️ خطأ في الاتصال، تأكد من الإنترنت.";
+        console.error("Error verifying code:", error);
+        msgEl.innerText = "⚠️ خطأ في الاتصال بالسيرفر. تأكد من الإنترنت.";
         msgEl.style.color = "var(--danger)";
         btn.disabled = false;
     }
 }
 
-// دالة محدثة لضمان تحديث الشيت بأن الكود تم استخدامه
+// دالة تحديث الشيت
 async function markCodeAsUsed(id, codeVal) {
     try {
-        // نستخدم كود التفعيل نفسه كمعرف للبحث في SheetDB
         await fetch(`${API_URL}/code/${codeVal}`, {
             method: 'PATCH',
             headers: {
@@ -83,18 +125,16 @@ async function markCodeAsUsed(id, codeVal) {
         });
         console.log("تم تحديث حالة الكود في الشيت بنجاح.");
     } catch (e) {
-        console.error("تنبيه: لم نتمكن من الاتصال بالسيرفر للتحديث (تحقق من صلاحيات الـ API).");
+        console.warn("تنبيه: لم يتم تحديث السيرفر (تحقق من صلاحيات الكتابة في API Key).");
     }
 }
 
-function grantAccess(isAdmin) {
+function grantAccess(usedCode) {
     const msgEl = document.getElementById('activation-msg');
     const screen = document.getElementById('activation-screen');
     
-    msgEl.innerText = isAdmin ? "✅ تم التفعيل (وضع الإدارة)" : "✅ تم التفعيل بنجاح";
+    msgEl.innerText = "✅ تم التفعيل بنجاح";
     msgEl.style.color = "var(--success)";
-    
-    localStorage.setItem(LOCAL_STORAGE_KEY, 'true');
     
     setTimeout(() => {
         screen.style.opacity = '0';
@@ -105,10 +145,7 @@ function grantAccess(isAdmin) {
 }
 
 
-// --- قواعد البيانات الموسعة ---
-
-// 1. بنك أسئلة الوحدات (70 سؤال لكل وحدة)
-
+// --- قواعد البيانات ---
 const unit_01_DB = [
     { q: "PGCD(120, 48)", a: "24" }, { q: "هل العددان 15 و 28 أوليان فيما بينهما؟ (نعم/لا)", a: "نعم" },
     { q: "PGCD(150, 30)", a: "30" }, { q: "بسط الجذر √18", a: "3√2" },
