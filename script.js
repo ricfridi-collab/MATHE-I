@@ -1,11 +1,12 @@
 /**
- * HUNTER MATH - FINAL VERSION
- * نظام حماية محدث (معالجة مشكلة الفراغات في الشيت)
+ * HUNTER MATH - FINAL VERSION (FIXED)
+ * نظام حماية محدث (تم إصلاح مشكلة تحديث السيرفر)
  */
 
 // --- إعدادات الحماية ---
 const ADMIN_CODES = ["ADMIN-001", "ADMIN-002"];
-const API_URL = "https://sheetdb.io/api/v1/2kors32netakz";
+// ملاحظة: تأكد أن هذا الرابط يشير إلى الشيت الصحيح
+const API_URL = "https://sheetdb.io/api/v1/2kors32netakz"; 
 const LOCAL_STORAGE_KEY = "hunter_math_activated_codes";
 
 // --- منطق التحقق من التفعيل ---
@@ -17,11 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function verifyCode() {
-    // دالة مساعدة لإزالة المسافات الزائدة من النصوص
     const cleanString = (str) => str.replace(/\s+/g, '').trim();
 
     const rawInputCode = document.getElementById('activation-code').value;
-    const inputCode = cleanString(rawInputCode); // تنظيف الكود المدخل من الفراغات
+    const inputCode = cleanString(rawInputCode);
     
     const msgEl = document.getElementById('activation-msg');
     const btn = document.getElementById('activate-btn');
@@ -51,7 +51,7 @@ async function verifyCode() {
         return;
     }
 
-    // 3. البحث عن الكود (مع البحث المباشر وتنظيف البيانات)
+    // 3. البحث عن الكود
     try {
         const searchUrl = `${API_URL}/search?code=${encodeURIComponent(inputCode)}`;
         const response = await fetch(searchUrl);
@@ -60,7 +60,6 @@ async function verifyCode() {
         
         const data = await response.json();
 
-        // إذا كانت المصفوفة فارغة، الكود غير موجود
         if (data.length === 0) {
             msgEl.innerText = "❌ كود التفعيل غير صحيح!";
             msgEl.style.color = "var(--danger)";
@@ -68,16 +67,11 @@ async function verifyCode() {
             return;
         }
 
-        // الكود موجود، نتحقق من قيمته (مع تنظيف قيمته من الشيت أيضاً)
         const codeEntry = data[0]; 
-        
-        // ننظف الكود القادم من الشيت للتأكد من مطابقته (حل مشكلة الفراغات)
         const sheetCodeValue = cleanString(codeEntry.code);
 
         // مقارنة الكود المدخل بالكود النظيف من الشيت
         if (inputCode !== sheetCodeValue) {
-            // قد يكون هناك حالة أخرى (مثل حالة الأحرف الكبيرة)، لكن التنظيف يحل 90% من المشاكل
-            // سنعتمم البحث الأصلي لفحص الحالة
             if (codeEntry.code.toLowerCase() !== rawInputCode.toLowerCase()) {
                  msgEl.innerText = "❌ كود التفعيل غير صحيح!";
                  msgEl.style.color = "var(--danger)";
@@ -96,6 +90,7 @@ async function verifyCode() {
             usedCodesLocal.push(inputCode);
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(usedCodesLocal));
             
+            // تمرير id الصف وتأكيد التحديث قبل الدخول
             await markCodeAsUsed(codeEntry.id, inputCode); 
             grantAccess(inputCode);
         }
@@ -108,10 +103,14 @@ async function verifyCode() {
     }
 }
 
-// دالة تحديث الشيت
+// دالة تحديث الشيت (تم إصلاحها)
 async function markCodeAsUsed(id, codeVal) {
     try {
-        await fetch(`${API_URL}/code/${codeVal}`, {
+        // التعديل هنا: استخدام المعرف (id) بدلاً من قيمة الكود في الرابط
+        // الرابط السابق كان خاطئاً: ${API_URL}/code/${codeVal}
+        // الرابط الصحيح يجب أن يشير إلى رقم الصف: ${API_URL}/${id}
+        
+        await fetch(`${API_URL}/${id}`, {
             method: 'PATCH',
             headers: {
                 'Accept': 'application/json',
@@ -126,6 +125,8 @@ async function markCodeAsUsed(id, codeVal) {
         console.log("تم تحديث حالة الكود في الشيت بنجاح.");
     } catch (e) {
         console.warn("تنبيه: لم يتم تحديث السيرفر (تحقق من صلاحيات الكتابة في API Key).");
+        // ملاحظة: في حال فشل التحديث هنا، الكود سيعتبر "صحيح" للجهاز الحالي
+        // لكن قد يسمح للأجهزة الأخرى باستخدامه إذا لم يتحدث السيرفر.
     }
 }
 
@@ -145,7 +146,7 @@ function grantAccess(usedCode) {
 }
 
 
-// --- قواعد البيانات ---
+// --- قواعد البيانات (نفس البيانات الأصلية) ---
 const unit_01_DB = [
     { q: "PGCD(120, 48)", a: "24" }, { q: "هل العددان 15 و 28 أوليان فيما بينهما؟ (نعم/لا)", a: "نعم" },
     { q: "PGCD(150, 30)", a: "30" }, { q: "بسط الجذر √18", a: "3√2" },
